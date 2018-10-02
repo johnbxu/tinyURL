@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 
 app.use(cookieParser());
 
+app.use('/public', express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
@@ -49,6 +50,7 @@ app.get('/urls', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
     username: req.cookies['username'],
+    user_id: req.cookies['user_id'],
   };
   res.render('urls_index', templateVars);
 });
@@ -83,21 +85,34 @@ app.get('/urls/:id', (req, res) => {
       shortURL = url;
     }
   }
-  templateVars = {
+  let templateVars = {
     url: shortURL,
     username: req.cookies['username'],
+    user_id: req.cookies['user_id'],
   };
   res.render('urls_show', templateVars);
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
+  res.cookie('loggedIn', true);
   res.redirect('/urls');
-  console.log(req.body.username);
+});
+
+app.get('/login', (req, res) => {
+  let templateVars = {
+    username: req.cookies['username'],
+    user_id: req.cookies['user_id'],
+    loggedIn: req.cookies.loggedIn
+  };
+  res.render('urls_login', templateVars);
 });
 
 app.post('/logout', (req, res) => {
+  res.clearCookie('user_id');
   res.clearCookie('username');
+  res.clearCookie('true');
+  res.clearCookie('login');
+  res.clearCookie('loggedIn');
   res.redirect('/urls');
 });
 
@@ -105,6 +120,7 @@ app.get('/register', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
     username: req.cookies['username'],
+    user_id: req.cookies['user_id'],
   };
   res.render('urls_register', templateVars);
 });
@@ -113,14 +129,12 @@ app.post('/register', (req, res) => {
   let duplicate = false;
   for (const user in users) {
     const currentEmail = users[user].email;
-    console.log(currentEmail);
     if (currentEmail == req.body.email) {
       duplicate = true;
       res.redirect('/400');
     }
   }
   if (!duplicate) {
-
     let userid = generateRandomString();
     users[userid] = {};
     users[userid].id = userid;

@@ -2,26 +2,11 @@
 <html>
 <head>
   <title>Header</title>
+  <link rel='stylesheet' type='text/css' href="/public/assets/styles.css">
 </head>
 <body>
-  <table>
-    <tr>
-      <% if (!username) { %>
-        <th>
-          <form method='POST' action='/login'>
-            Username: <input type="text" name="username">
-            <button type='submit'>Login</button>
-          </form>
-        </th>
-      <% } else { %>
-      <th>User: <%= username %></th>
-      <th>
-          <form method='POST' action='/logout'>
-            <button type='submit'>Logout</button>
-          </form>
-        </th>
-      <% } %>
-    </tr>
-  <table>
+  <span><a href='/register'>Registration</span>
+  <span><a href='/login'>Login</a></span>
+  <span><a href='/urls'>Home</a></span>
 </body>
 </html>
