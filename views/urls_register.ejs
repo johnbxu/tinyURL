@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Registration</title>
+</head>
+<style>
+  h2 {
+    color: blue;
+    font-family: 'Helvetica';
+  }
+  table {
+    margin-top: 30px;
+    border: solid 1px black;
+    font-family: 'Helvetica';
+    color: blue;
+    width: 70%;
+  }
+  th {
+    margin-left: 10px;
+    width: 50px;
+  }
+  form {
+    margin: 10px;
+  }
+</style>
+
+<body>
+
+  <header>
+    <% include ../partials/_header %>
+  </header>
+  <h1>Registration</h1>
+  <table>
+    <tr>
+      <form action='/register' method="POST" id='register'>
+        <th>
+          Email:
+          <input type="email" name="email">
+        </th>
+        <th>
+          <button type='submit' formmethod='POST'>Submit</button>
+        </th>
+      </form>
+    </tr>
+    <tr>
+      <form>
+        <th>
+          Password:
+          <input type="password" name="password" form='register'>
+        </th>
+      </form>
+    </tr>
+  </table>
+
+
+</body>
+</html>
+

@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require('body-parser');
 const generateRandomString = require('./generateRandomString');
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 
 app.use(cookieParser());
 
@@ -11,9 +11,22 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
 // variables
-let urlDatabase = {
+const urlDatabase = {
   'b2xVn2': 'http://lighthouselabs.ca',
   '9sm5xk': 'http://www.google.com',
+};
+
+const users = {
+  'userRandomID': {
+    id: 'userRandomID',
+    email: 'user@example.com',
+    password: 'purple-monkey-dinosaur'
+  },
+  'user2RandomID': {
+    id: 'user2RandomID',
+    email: 'user2@example.com',
+    password: 'dishwasher-funk'
+  },
 };
 
 // get requests
@@ -48,19 +61,11 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
-
-app.get('/hello', (req, res) => {
-  let templateVars = { greeting: 'Hello World!' };
-  res.render('hello_world', templateVars);
-});
-
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = urlDatabase[shortURL];
   res.redirect(longURL);
 });
-
-// post requests
 
 app.post('/urls/:id/delete', (req, res) => {
   let deleteURL = req.params.id;
@@ -98,6 +103,26 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
+});
+
+app.get('/register', (req, res) => {
+  let templateVars = {
+    urls: urlDatabase,
+    username: req.cookies['username'],
+  };
+  res.render('urls_register', templateVars);
+});
+
+app.post('/register', (req, res) => {
+  let userid = generateRandomString();
+  users[userid] = {};
+  users[userid].id = userid;
+  users[userid].email = req.body.email;
+  users[userid].password = req.body.password;
+  console.log(users);
+  res.cookie('email', req.body.email);
+  res.cookie('user_id', userid);
+  res.redirect('/');
 });
 
 // listen
