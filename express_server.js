@@ -116,7 +116,7 @@ app.post('/register', (req, res) => {
     console.log(currentEmail);
     if (currentEmail == req.body.email) {
       duplicate = true;
-      res.redirect('/403');
+      res.redirect('/400');
     }
   }
   if (!duplicate) {
@@ -133,8 +133,8 @@ app.post('/register', (req, res) => {
   }
 });
 
-app.get('/403', (req, res) => {
-  res.render('403');
+app.get('/400', (req, res) => {
+  res.render('400');
 });
 
 // listen
