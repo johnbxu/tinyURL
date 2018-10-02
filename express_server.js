@@ -3,6 +3,9 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require('body-parser');
 const generateRandomString = require('./generateRandomString');
+const cookieParser = require('cookie-parser')
+
+app.use(cookieParser());
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
@@ -18,30 +21,33 @@ app.get('/', (req, res) => {
   res.redirect('/urls');
 });
 
-app.get('/urls', (req, res) => {
-  let templateVars = { urls: urlDatabase };
-  res.render('urls_index', templateVars);
+app.get('/urls/new', (req, res) => {
+  res.render('urls_new');
 });
 
-app.get('/urls/new', (req, res) => {
-  let templateVars = { urls: urlDatabase };
-  res.render('urls_new', templateVars);
+app.post('/urls/newURL', (req, res) => {
+  let longURL = req.body.longURL;
+  let shortURL;
+  do {
+    shortURL = generateRandomString();
+  }
+  while (urlDatabase[shortURL]);
+  urlDatabase[shortURL] = longURL;
+  res.redirect(`http://localhost:8080/urls/${shortURL}`);
+});
+
+app.get('/urls', (req, res) => {
+  let templateVars = {
+    urls: urlDatabase,
+    username: req.cookies['username'],
+  };
+  res.render('urls_index', templateVars);
 });
 
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get('/urls/:id', (req, res) => {
-  let shortURL;
-  for (url in urlDatabase) {
-    if (url == req.params.id) {
-      shortURL = url;
-    }
-  }
-  templateVars = {url: shortURL};
-  res.render('urls_show', templateVars);
-});
 
 app.get('/hello', (req, res) => {
   let templateVars = { greeting: 'Hello World!' };
@@ -68,14 +74,25 @@ app.post('/urls/:id/update', (req, res) => {
   res.redirect('/urls');
 });
 
-app.post('/urls/new', (req, res) => {
-  let longURL = req.body.longURL;
-  do {
-    shortURL = generateRandomString();
+
+app.get('/urls/:id', (req, res) => {
+  let shortURL;
+  for (url in urlDatabase) {
+    if (url == req.params.id) {
+      shortURL = url;
+    }
   }
-  while (urlDatabase[shortURL]);
-  urlDatabase[shortURL] = longURL;
-  res.redirect(`http://localhost:8080/urls/${shortURL}`);
+  templateVars = {
+    url: shortURL,
+    username: req.cookies['username'],
+  };
+  res.render('urls_show', templateVars);
+});
+
+app.post('/login', (req, res) => {
+  res.cookie('login', req.body.username);
+  res.redirect('/urls');
+  console.log(req.body.username);
 });
 
 // listen
