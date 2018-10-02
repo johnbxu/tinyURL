@@ -41,7 +41,7 @@ app.get('/hello', (req, res) => {
   res.render('hello_world', templateVars);
 });
 
-app.get("/u/:shortURL", (req, res) => {
+app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = urlDatabase[shortURL];
   res.redirect(longURL);
@@ -49,15 +49,20 @@ app.get("/u/:shortURL", (req, res) => {
 
 // post requests
 app.post('/urls', (req, res) => {
-  longURL = req.body.longURL;
+  let longURL = req.body.longURL;
   do {
     shortURL = generateRandomString();
   }
-  while (urlDatabase[shortURL])
+  while (urlDatabase[shortURL]);
   urlDatabase[shortURL] = longURL;
-  res.redirect(`http://localhost:8080/urls/${shortURL}`)
+  res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
+app.post('/urls/:id/delete', (req, res) => {
+  let deleteURL = req.params.id;
+  delete urlDatabase[deleteURL];
+  res.redirect('/');
+});
 
 // listen
 app.listen(PORT, () => {
