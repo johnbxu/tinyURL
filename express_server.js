@@ -90,9 +90,14 @@ app.get('/urls/:id', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('login', req.body.username);
+  res.cookie('username', req.body.username);
   res.redirect('/urls');
   console.log(req.body.username);
+});
+
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
 });
 
 // listen
