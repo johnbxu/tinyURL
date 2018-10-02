@@ -4,13 +4,23 @@
   <title>TinyApp</title>
 </head>
 <style>
-  button {
-    margin: 5px;
+  h2 {
+    color: blue;
+    font-family: 'Helvetica';
+  }
+  table {
+    margin-top: 30px;
+    border: solid 1px black;
+    font-family: 'Helvetica';
+    color: blue;
+    width: 50%;
+  }
+  th {
+    margin-left: 10px;
+    width: 50px;
   }
   form {
-    border: solid black 1px;
-    margin: 5px;
-    width: 50%;
+    margin: 10px;
   }
 </style>
 <body>
@@ -22,12 +32,23 @@
   <h1>
     List of URLs in database
   </h1>
+  <table>
     <% for (const url in urls) { %>
-      <form method="POST" action='/urls/<%= url %>/delete'><%= url %>: <%= urls[url] %>
-        <button type='submit' formmethod='POST'>Delete</button>
-      </form>
-
-      <% } %>
-
+      <tr>
+        <th>
+          <form action='/urls/<%= url %>/delete' method="POST" id='form<%= url %>'><%= url %>: <%= urls[url] %>
+          </form>
+        </th>
+        <th>
+          <button type='submit' formmethod='POST' form='form<%= url %>'>Delete</button>
+        </th>
+        <th>
+          <form method="GET" action='/urls/<%= url %>/'>
+            <button type='submit' formmethod='GET'>Update</button>
+          </form>
+        </th>
+      </tr>
+    <% } %>
+  </table>
 </body>
 </html>

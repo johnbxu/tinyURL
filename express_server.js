@@ -15,6 +15,10 @@ let urlDatabase = {
 
 // get requests
 app.get('/', (req, res) => {
+  res.redirect('/urls');
+});
+
+app.get('/urls', (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
@@ -29,10 +33,13 @@ app.get('/urls.json', (req, res) => {
 });
 
 app.get('/urls/:id', (req, res) => {
-  let templateVars = {
-    shortURL: req.params.id,
-    urls: urlDatabase,
-  };
+  let shortURL;
+  for (url in urlDatabase) {
+    if (url == req.params.id) {
+      shortURL = url;
+    }
+  }
+  templateVars = {url: shortURL};
   res.render('urls_show', templateVars);
 });
 
@@ -48,7 +55,20 @@ app.get('/u/:shortURL', (req, res) => {
 });
 
 // post requests
-app.post('/urls', (req, res) => {
+
+app.post('/urls/:id/delete', (req, res) => {
+  let deleteURL = req.params.id;
+  delete urlDatabase[deleteURL];
+  res.redirect('/');
+});
+
+app.post('/urls/:id/update', (req, res) => {
+  let updateURL = req.params.id;
+  urlDatabase[updateURL] = req.body.newurl;
+  res.redirect('/urls');
+});
+
+app.post('/urls/new', (req, res) => {
   let longURL = req.body.longURL;
   do {
     shortURL = generateRandomString();
@@ -56,12 +76,6 @@ app.post('/urls', (req, res) => {
   while (urlDatabase[shortURL]);
   urlDatabase[shortURL] = longURL;
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
-});
-
-app.post('/urls/:id/delete', (req, res) => {
-  let deleteURL = req.params.id;
-  delete urlDatabase[deleteURL];
-  res.redirect('/');
 });
 
 // listen
