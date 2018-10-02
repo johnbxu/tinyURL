@@ -40,11 +40,7 @@ app.get('/urls/new', (req, res) => {
 
 app.post('/urls/newURL', (req, res) => {
   let longURL = req.body.longURL;
-  let shortURL;
-  do {
-    shortURL = generateRandomString();
-  }
-  while (urlDatabase[shortURL]);
+  let shortURL = generateRandomString();
   urlDatabase[shortURL] = longURL;
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
@@ -114,15 +110,31 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
-  let userid = generateRandomString();
-  users[userid] = {};
-  users[userid].id = userid;
-  users[userid].email = req.body.email;
-  users[userid].password = req.body.password;
-  console.log(users);
-  res.cookie('email', req.body.email);
-  res.cookie('user_id', userid);
-  res.redirect('/');
+  let duplicate = false;
+  for (const user in users) {
+    const currentEmail = users[user].email;
+    console.log(currentEmail);
+    if (currentEmail == req.body.email) {
+      duplicate = true;
+      res.redirect('/403');
+    }
+  }
+  if (!duplicate) {
+
+    let userid = generateRandomString();
+    users[userid] = {};
+    users[userid].id = userid;
+    users[userid].email = req.body.email;
+    users[userid].password = req.body.password;
+    // console.log(users);
+    res.cookie('email', req.body.email);
+    res.cookie('user_id', userid);
+    res.redirect('/');
+  }
+});
+
+app.get('/403', (req, res) => {
+  res.render('403');
 });
 
 // listen
