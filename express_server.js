@@ -4,6 +4,7 @@ const PORT = 8080;
 const bodyParser = require('body-parser');
 const generateRandomString = require('./generateRandomString');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 
 app.use(cookieParser());
 
@@ -37,12 +38,12 @@ const users = {
   'userRandomID': {
     id: 'userRandomID',
     email: 'user@example.com',
-    password: 'purple-monkey-dinosaur'
+    password: bcrypt.hashSync('purple-monkey-dinosaur', 10),
   },
   'user2RandomID': {
     id: 'user2RandomID',
     email: 'user2@example.com',
-    password: 'dishwasher-funk'
+    password: bcrypt.hashSync('dishwasher-funk', 10),
   },
 };
 
@@ -135,7 +136,6 @@ app.get('/login', (req, res) => {
     loggedIn: req.cookies.loggedIn,
   };
   res.render('urls_login', templateVars);
-  res.redirect('/');
 });
 
 app.post('/login', (req, res) => {
@@ -143,7 +143,7 @@ app.post('/login', (req, res) => {
   for (user in users) {
     if (users[user].email == req.body.email) {
       userId = users[user].id;
-      if (req.body.password != users[userId].password) {
+      if (!bcrypt.compareSync(req.body.password, users[userId].password)) {
         res.redirect('/403');
       }
     }
@@ -152,12 +152,11 @@ app.post('/login', (req, res) => {
   res.cookie('loggedIn', true);
   res.cookie('email', req.body.email);
   res.cookie('user_id', userId);
-  res.redirect('/urls');
+  res.redirect('/');
 });
 
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
-  res.clearCookie('login');
   res.clearCookie('loggedIn');
   res.clearCookie('email');
   res.redirect('/urls');
@@ -186,7 +185,7 @@ app.post('/register', (req, res) => {
     users[userid] = {};
     users[userid].id = userid;
     users[userid].email = req.body.email;
-    users[userid].password = req.body.password;
+    users[userid].password = bcrypt.hashSync(req.body.password, 10);
     res.redirect('/');
   }
 });
