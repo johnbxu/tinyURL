@@ -93,13 +93,17 @@ app.get('/u/:shortURL', (req, res) => {
 
 app.post('/urls/:id/delete', (req, res) => {
   let deleteURL = req.params.id;
-  delete urlDatabase[deleteURL];
+  if (urlDatabase[deleteURL].userID == req.cookies['user_id']) {
+    delete urlDatabase[deleteURL];
+  } else res.redirect('/403');
   res.redirect('/');
 });
 
 app.post('/urls/:id/update', (req, res) => {
   let updateURL = req.params.id;
-  urlDatabase[updateURL].longURL = req.body.newurl;
+  if (urlDatabase[deleteURL].userID == req.cookies['user_id']) {
+    urlDatabase[updateURL].longURL = req.body.newurl;
+  } else res.redirect('/403');
   res.redirect('/urls');
 });
 
