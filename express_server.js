@@ -4,10 +4,12 @@ const app = express();
 const bodyParser = require('body-parser');
 const generateRandomString = require('./generateRandomString');
 const cookieSession = require('cookie-session');
+const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const methodOverride = require('method-override');
 
 // using packages
+app.use(cookieParser());
 app.use(methodOverride('_method'));
 app.use('/public', express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
@@ -35,6 +37,8 @@ const urlDatabase = {
   'b2xVn2': {
     longURL: 'http://lighthouselabs.ca',
     userID: 'userRandomID',
+    visits: 0,
+    uniqueVisits: 0,
   },
   '9sm5xk': {
     longURL: 'http://www.google.com',
@@ -96,6 +100,8 @@ app.post('/urls/new', (req, res) => {
   urlDatabase[shortURL] = {};
   urlDatabase[shortURL].longURL = longURL;
   urlDatabase[shortURL].userID = req.session['user_id'];
+  urlDatabase[shortURL].visits = 0;
+  urlDatabase[shortURL].uniqueVisits = 0;
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
@@ -142,6 +148,10 @@ app.get('/u/:shortURL', (req, res) => {
   }
   urlDatabase[shortURL].visits = urlDatabase[shortURL].visits || 0;
   urlDatabase[shortURL].visits += 1;
+  if (!req.cookies[shortURL]) {
+    res.cookie(shortURL, true);
+    urlDatabase[shortURL].uniqueVisits += 1;
+  };
   res.redirect(longURL);
 });
 
@@ -165,10 +175,12 @@ app.post('/login', (req, res) => {
     }
   }
   if (!userId) res.redirect('/403');
-  req.session.loggedIn = true;
-  req.session.email = req.body.email;
-  req.session.user_id = userId;
-  res.redirect('/');
+  else {
+    req.session.loggedIn = true;
+    req.session.email = req.body.email;
+    req.session.user_id = userId;
+    res.redirect('/');
+  };
 });
 
 app.post('/logout', (req, res) => {
