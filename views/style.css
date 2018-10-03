@@ -11,12 +11,14 @@ table {
   font-family: 'Helvetica';
   color: blue;
   width: 70%;
-  text-align: right;
+}
+tr {
+  text-align: left;
 }
 th {
   margin-left: 10px;
   width: 50px;
-  text-align: right;
+  text-align: left;
 }
 form {
   margin: 10px;
