@@ -87,7 +87,13 @@ app.post('/urls/new', (req, res) => {
 
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL].longURL;
+  console.log('-----urlDatabase----');
+  console.log(urlDatabase);
+  console.log('-----urlDatabase[shortURL----');
+  console.log(urlDatabase[shortURL]);
+  console.log(req.params.shortURL);
+  let longURL = urlDatabase[shortURL]['longURL'];
+  if (!urlDatabase[shortURL]) res.redirect('403');
   res.redirect(longURL);
 });
 
@@ -101,7 +107,7 @@ app.post('/urls/:id/delete', (req, res) => {
 
 app.post('/urls/:id/update', (req, res) => {
   let updateURL = req.params.id;
-  if (urlDatabase[deleteURL].userID == req.cookies['user_id']) {
+  if (urlDatabase[updateURL].userID == req.cookies['user_id']) {
     urlDatabase[updateURL].longURL = req.body.newurl;
   } else res.redirect('/403');
   res.redirect('/urls');
@@ -181,7 +187,6 @@ app.post('/register', (req, res) => {
     users[userid].id = userid;
     users[userid].email = req.body.email;
     users[userid].password = req.body.password;
-    console.log(users);
     res.redirect('/');
   }
 });
