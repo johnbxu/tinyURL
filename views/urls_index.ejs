@@ -9,7 +9,7 @@
   <!-- Add your EJS code here -->
   <header>
     <% include ../partials/_header %>
-    <link rel='stylesheet' href='style.css'>
+    <link rel='stylesheet' type='text/css' href='style.css'>
   </header>
 
   <h1>
@@ -17,21 +17,26 @@
   </h1>
   <table>
     <% for (const url in urls) { %>
-      <tr>
-        <th>
-          <form action='/urls/<%= url %>/delete' method="POST" id='form<%= url %>'><%= url %>: <%= urls[url] %>
-          </form>
-        </th>
-        <th>
-          <button type='submit' formmethod='POST' form='form<%= url %>'>Delete</button>
-        </th>
-        <th>
-          <form method="GET" action='/urls/<%= url %>/'>
-            <button type='submit' formmethod='GET'>Update</button>
-          </form>
-        </th>
-      </tr>
+      <% if (user_id == urls[url].userID) { %>
+        <tr>
+          <th>
+            <form action='/urls/<%= url %>/delete' method="POST" id='form<%= url %>'><%= url %>: <%= urls[url].longURL %>
+            </form>
+          </th>
+          <th>
+            <button type='submit' formmethod='POST' form='form<%= url %>'>Delete</button>
+          </th>
+          <th>
+            <form method="GET" action='/urls/<%= url %>/'>
+              <button type='submit' formmethod='GET'>Update</button>
+            </form>
+          </th>
+        </tr>
+      <% } %>
     <% } %>
+      <% if (!loggedIn) { %>
+      <tr><th style="text-align: center;">Please Login First</th></tr>
+      <% } %>
   </table>
 </body>
 </html>

@@ -13,8 +13,14 @@ app.set('view engine', 'ejs');
 
 // variables
 const urlDatabase = {
-  'b2xVn2': 'http://lighthouselabs.ca',
-  '9sm5xk': 'http://www.google.com',
+  'b2xVn2': {
+    longURL: 'http://lighthouselabs.ca',
+    userID: 'userRandomID',
+  },
+  '9sm5xk': {
+    longURL: 'http://www.google.com',
+    userID: 'userRandomID',
+  },
 };
 
 const users = {
@@ -35,22 +41,6 @@ app.get('/', (req, res) => {
   res.redirect('/urls');
 });
 
-app.get('/urls/new', (req, res) => {
-  let templateVars = {
-    urls: urlDatabase,
-    user_id: req.cookies['user_id'],
-    loggedIn: req.cookies.loggedIn,
-  };
-  res.render('urls_new', templateVars);
-});
-
-app.post('/urls/newURL', (req, res) => {
-  let longURL = req.body.longURL;
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
-  res.redirect(`http://localhost:8080/urls/${shortURL}`);
-});
-
 app.get('/urls', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
@@ -64,9 +54,29 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
+app.get('/urls/new', (req, res) => {
+  let templateVars = {
+    urls: urlDatabase,
+    user_id: req.cookies['user_id'],
+    loggedIn: req.cookies.loggedIn,
+  };
+  if (!req.cookies.loggedIn) {
+    res.redirect('/');
+  }
+  res.render('urls_new', templateVars);
+});
+
+app.post('/urls/new', (req, res) => {
+  let longURL = req.body.longURL;
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = {};
+  urlDatabase[shortURL].longURL = longURL;
+  res.redirect(`http://localhost:8080/urls/${shortURL}`);
+});
+
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL];
+  let longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -78,7 +88,7 @@ app.post('/urls/:id/delete', (req, res) => {
 
 app.post('/urls/:id/update', (req, res) => {
   let updateURL = req.params.id;
-  urlDatabase[updateURL] = req.body.newurl;
+  urlDatabase[updateURL].longURL = req.body.newurl;
   res.redirect('/urls');
 });
 
@@ -126,9 +136,9 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
-  res.clearCookie('true');
   res.clearCookie('login');
   res.clearCookie('loggedIn');
+  res.clearCookie('email');
   res.redirect('/urls');
 });
 
