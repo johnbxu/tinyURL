@@ -15,6 +15,17 @@
       <button type='submit' formmethod='POST'>Update</button>
     </form>
   </div>
+  <table>
+      <tr>
+        <th>Visitor</th><th>Time of visit</th>
+      </tr>
+    <% for (const visitor in visitors) { %>
+      <tr>
+        <th><%= visitor %></th><th><%= visitors[visitor] %></th>
+
+      </tr>
+    <% } %>
+  </table>
 
 </body>
 </html>

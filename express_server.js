@@ -39,6 +39,7 @@ const urlDatabase = {
     userID: 'userRandomID',
     visits: 0,
     uniqueVisits: 0,
+    visitors: {},
   },
   '9sm5xk': {
     longURL: 'http://www.google.com',
@@ -102,6 +103,7 @@ app.post('/urls/new', (req, res) => {
   urlDatabase[shortURL].userID = req.session['user_id'];
   urlDatabase[shortURL].visits = 0;
   urlDatabase[shortURL].uniqueVisits = 0;
+  urlDatabase[shortURL].visitors = {};
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
@@ -117,6 +119,7 @@ app.get('/urls/:id', (req, res) => {
     url: shortURL,
     user_id: req.session.user_id,
     loggedIn: req.session.loggedIn,
+    visitors: urlDatabase[shortURL].visitors,
   };
   res.render('urls_show', templateVars);
 });
@@ -151,7 +154,11 @@ app.get('/u/:shortURL', (req, res) => {
   if (!req.cookies[shortURL]) {
     res.cookie(shortURL, true);
     urlDatabase[shortURL].uniqueVisits += 1;
-  };
+  }
+  let timeStamp = new Date();
+  let visitorId = generateRandomString();
+  urlDatabase[shortURL].visitors[visitorId] = timeStamp;
+  console.log(urlDatabase[shortURL].visitors[visitorId]);   //this works. need to change database so every visit is logged.
   res.redirect(longURL);
 });
 
