@@ -11,6 +11,16 @@ app.use('/public', express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
+const urlsForUser = (id) => {
+  const filteredURLs = {};
+  for (const url in urlDatabase) {
+    if (id == urlDatabase[url].userID) {
+      filteredURLs[url] = urlDatabase[url];
+    }
+  }
+  return filteredURLs;
+};
+
 // variables
 const urlDatabase = {
   'b2xVn2': {
@@ -43,7 +53,7 @@ app.get('/', (req, res) => {
 
 app.get('/urls', (req, res) => {
   let templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(req.cookies['user_id']),
     user_id: req.cookies['user_id'],
     loggedIn: req.cookies.loggedIn,
   };
@@ -71,6 +81,7 @@ app.post('/urls/new', (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {};
   urlDatabase[shortURL].longURL = longURL;
+  urlDatabase[shortURL].userID = req.cookies['user_id'];
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
