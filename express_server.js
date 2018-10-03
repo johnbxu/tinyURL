@@ -1,3 +1,4 @@
+// importing packages
 const express = require('express');
 const app = express();
 const PORT = 8080;
@@ -6,17 +7,17 @@ const generateRandomString = require('./generateRandomString');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 
+// using packages
 app.use(cookieSession({
   name: 'session',
   keys: ['keydonut', 'keyeclair'],
-
-  // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 app.use('/public', express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
+// function to filter urls based on userID
 const urlsForUser = (id) => {
   const filteredURLs = {};
   for (const url in urlDatabase) {
@@ -52,6 +53,7 @@ const users = {
   },
 };
 
+// ------------------------------endpoints ---------------------------------- //
 // get requests
 app.get('/', (req, res) => {
   res.redirect('/urls');
@@ -70,6 +72,7 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
+// enpoints for creating new shortURL
 app.get('/urls/new', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
@@ -90,16 +93,23 @@ app.post('/urls/new', (req, res) => {
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
-app.get('/u/:shortURL', (req, res) => {
-  let shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL].longURL;
-  if (!urlDatabase[shortURL]) res.redirect('403');
-  if (longURL.indexOf('http://') < 0 || longURL.indexOf('http://') > 0) {
-    longURL = 'http://' + longURL;
+// page for updating an URL
+app.get('/urls/:id', (req, res) => {
+  let shortURL;
+  for (url in urlDatabase) {
+    if (url == req.params.id) {
+      shortURL = url;
+    }
   }
-  res.redirect(longURL);
+  let templateVars = {
+    url: shortURL,
+    user_id: req.session.user_id,
+    loggedIn: req.session.loggedIn,
+  };
+  res.render('urls_show', templateVars);
 });
 
+// update and delete endpoints
 app.post('/urls/:id/delete', (req, res) => {
   let deleteURL = req.params.id;
   if (urlDatabase[deleteURL].userID == req.session['user_id']) {
@@ -116,22 +126,18 @@ app.post('/urls/:id/update', (req, res) => {
   res.redirect('/urls');
 });
 
-
-app.get('/urls/:id', (req, res) => {
-  let shortURL;
-  for (url in urlDatabase) {
-    if (url == req.params.id) {
-      shortURL = url;
-    }
+// redirect to longURL when shortURL is visited in /u/shortURL
+app.get('/u/:shortURL', (req, res) => {
+  let shortURL = req.params.shortURL;
+  let longURL = urlDatabase[shortURL].longURL;
+  if (!urlDatabase[shortURL]) res.redirect('403');
+  if (longURL.indexOf('http://') < 0 || longURL.indexOf('http://') > 0) {
+    longURL = 'http://' + longURL;
   }
-  let templateVars = {
-    url: shortURL,
-    user_id: req.session.user_id,
-    loggedIn: req.session.loggedIn,
-  };
-  res.render('urls_show', templateVars);
+  res.redirect(longURL);
 });
 
+// login and logout endpoints
 app.get('/login', (req, res) => {
   let templateVars = {
     user_id: req.session.user_id,
@@ -162,6 +168,8 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls');
 });
 
+
+// registration endpoints
 app.get('/register', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
@@ -190,6 +198,7 @@ app.post('/register', (req, res) => {
   }
 });
 
+// error endpoints
 app.get('/400', (req, res) => {
   res.render('400');
 });
