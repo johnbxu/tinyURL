@@ -22,7 +22,8 @@
         <% for (const url in urls) { %>
           <tr>
             <th>
-              <form action='/urls/<%= url %>/delete?_method=DELETE' method="POST" id='form<%= url %>'><%= url %>: <%= urls[url].longURL %>
+              <form action='/urls/<%= url %>/delete?_method=DELETE' method="POST" id='form<%= url %>'>
+                <a href='/u/<%= url %>'><%= url %>: <%= urls[url].longURL %>
               </form>
             </th>
             <th>

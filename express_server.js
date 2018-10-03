@@ -55,6 +55,10 @@ const users = {
   },
 };
 
+const analytics = {
+
+};
+
 // ------------------------------endpoints ---------------------------------- //
 // get requests
 app.get('/', (req, res) => {
@@ -136,6 +140,8 @@ app.get('/u/:shortURL', (req, res) => {
   if (longURL.indexOf('http://') < 0 || longURL.indexOf('http://') > 0) {
     longURL = 'http://' + longURL;
   }
+  urlDatabase[shortURL].visits = urlDatabase[shortURL].visits || 0;
+  urlDatabase[shortURL].visits += 1;
   res.redirect(longURL);
 });
 
