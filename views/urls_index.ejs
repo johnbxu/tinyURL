@@ -22,14 +22,14 @@
         <% for (const url in urls) { %>
           <tr>
             <th>
-              <form action='/urls/<%= url %>/delete' method="POST" id='form<%= url %>'><%= url %>: <%= urls[url].longURL %>
+              <form action='/urls/<%= url %>/delete?_method=DELETE' method="POST" id='form<%= url %>'><%= url %>: <%= urls[url].longURL %>
               </form>
             </th>
             <th>
               <button type='submit' formmethod='POST' form='form<%= url %>'>Delete</button>
             </th>
             <th>
-              <form method="GET" action='/urls/<%= url %>/'>
+              <form method="GET" action='/urls/<%= url %>'>
                 <button type='submit' formmethod='GET'>Update</button>
               </form>
             </th>

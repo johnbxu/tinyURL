@@ -10,7 +10,7 @@
   </header>
   <h1>Short URL: <%= url %></h1>
   <div class="textbox">
-    <form method="POST" action='/urls/<%= url %>/update'>
+    <form method="POST" action='/urls/<%= url %>/update?_method=PUT'>
       New url: <input type="text" name="newurl">
       <button type='submit' formmethod='POST'>Update</button>
     </form>

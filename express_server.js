@@ -1,21 +1,22 @@
 // importing packages
 const express = require('express');
 const app = express();
-const PORT = 8080;
 const bodyParser = require('body-parser');
 const generateRandomString = require('./generateRandomString');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override');
 
 // using packages
+app.use(methodOverride('_method'));
+app.use('/public', express.static('public'));
+app.use(bodyParser.urlencoded({extended: true}));
+app.set('view engine', 'ejs');
 app.use(cookieSession({
   name: 'session',
   keys: ['keydonut', 'keyeclair'],
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
-app.use('/public', express.static('public'));
-app.use(bodyParser.urlencoded({extended: true}));
-app.set('view engine', 'ejs');
 
 // function to filter urls based on userID
 const urlsForUser = (id) => {
@@ -29,6 +30,7 @@ const urlsForUser = (id) => {
 };
 
 // variables
+const PORT = 8080;
 const urlDatabase = {
   'b2xVn2': {
     longURL: 'http://lighthouselabs.ca',
@@ -110,7 +112,7 @@ app.get('/urls/:id', (req, res) => {
 });
 
 // update and delete endpoints
-app.post('/urls/:id/delete', (req, res) => {
+app.delete('/urls/:id/delete', (req, res) => {
   let deleteURL = req.params.id;
   if (urlDatabase[deleteURL].userID == req.session['user_id']) {
     delete urlDatabase[deleteURL];
@@ -118,7 +120,7 @@ app.post('/urls/:id/delete', (req, res) => {
   res.redirect('/');
 });
 
-app.post('/urls/:id/update', (req, res) => {
+app.put('/urls/:id/update', (req, res) => {
   let updateURL = req.params.id;
   if (urlDatabase[updateURL].userID == req.session['user_id']) {
     urlDatabase[updateURL].longURL = req.body.newurl;
