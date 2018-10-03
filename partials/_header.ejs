@@ -5,8 +5,13 @@
   <link rel='stylesheet' type='text/css' href="/public/assets/styles.css">
 </head>
 <body>
-  <span><a href='/register'>Registration</span>
-  <span><a href='/login'>Login</a></span>
   <span><a href='/urls'>Home</a></span>
+  <span><a href='/register'>Registration</a></span>
+  <% if (!loggedIn) { %>
+  <span><a href='/login'>Login</a></span>
+  <% } else { %>
+  <span><a href='/login'>Logout</a></span>
+  <% } %>
+  <span><a href='/urls/new'>New URL</a></span>
 </body>
 </html>

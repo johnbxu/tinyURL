@@ -11,6 +11,7 @@ table {
   font-family: 'Helvetica';
   color: blue;
   width: 70%;
+  text-align: right;
 }
 th {
   margin-left: 10px;

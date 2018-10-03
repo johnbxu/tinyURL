@@ -5,8 +5,10 @@
   </head>
   <style>
 </style>
-  <body style="font-size:20px; padding:50px;">
+  <body>
+    <header>
     <% include ../partials/_header %>
+    </header>
     <form action="/urls/newURL" method="POST" style="margin:150px;">
       <label for="longURL">Enter a URL:</label>
       <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
