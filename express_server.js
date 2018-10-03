@@ -78,8 +78,7 @@ app.get('/urls/new', (req, res) => {
   };
   if (!req.session.loggedIn) {
     res.redirect('/');
-  }
-  res.render('urls_new', templateVars);
+  } else res.render('urls_new', templateVars);
 });
 
 app.post('/urls/new', (req, res) => {
@@ -93,13 +92,11 @@ app.post('/urls/new', (req, res) => {
 
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
-  console.log('-----urlDatabase----');
-  console.log(urlDatabase);
-  console.log('-----urlDatabase[shortURL----');
-  console.log(urlDatabase[shortURL]);
-  console.log(req.params.shortURL);
-  let longURL = urlDatabase[shortURL]['longURL'];
+  let longURL = urlDatabase[shortURL].longURL;
   if (!urlDatabase[shortURL]) res.redirect('403');
+  if (longURL.indexOf('http://') < 0 || longURL.indexOf('http://') > 0) {
+    longURL = 'http://' + longURL;
+  }
   res.redirect(longURL);
 });
 
