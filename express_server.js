@@ -11,7 +11,7 @@ const methodOverride = require('method-override');
 // using packages
 app.use(cookieParser());
 app.use(methodOverride('_method'));
-app.use('/public', express.static('public'));
+// app.use('/public', express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 app.use(cookieSession({
@@ -44,6 +44,9 @@ const urlDatabase = {
   '9sm5xk': {
     longURL: 'http://www.google.com',
     userID: 'userRandomID',
+    visits: 0,
+    uniqueVisits: 0,
+    visitors: {},
   },
 };
 
@@ -60,23 +63,32 @@ const users = {
   },
 };
 
-const analytics = {
-
-};
-
 // ------------------------------endpoints ---------------------------------- //
-// get requests
+// endpoints for index page
 app.get('/', (req, res) => {
-  res.redirect('/urls');
+  if (req.session.loggedIn && users[req.session.user_id]) {
+    res.redirect('/urls');
+  } else {
+    res.clearCookie('session');
+    res.redirect('/login');
+  }
 });
 
 app.get('/urls', (req, res) => {
-  let templateVars = {
-    urls: urlsForUser(req.session['user_id']),
-    user_id: req.session['user_id'],
-    loggedIn: req.session.loggedIn,
-  };
-  res.render('urls_index', templateVars);
+  // checks is user's id exists in the user database
+  if (req.session.loggedIn && users[req.session.user_id]) {
+    let templateVars = {
+      urls: urlsForUser(req.session['user_id']),
+      user_id: req.session['user_id'],
+      loggedIn: req.session.loggedIn,
+      email: users[req.session.user_id].email,
+    };
+    res.render('urls_index', templateVars);
+  } else {
+    //if user doesn't exist in database, clear session cookies
+    res.clearCookie('session');
+    res.redirect('/login');
+  }
 });
 
 app.get('/urls.json', (req, res) => {
@@ -84,26 +96,31 @@ app.get('/urls.json', (req, res) => {
 });
 
 // enpoints for creating new shortURL
-app.get('/urls/new', (req, res) => {
-  let templateVars = {
-    urls: urlDatabase,
-    user_id: req.session['user_id'],
-    loggedIn: req.session.loggedIn,
-  };
-  if (!req.session.loggedIn) {
-    res.redirect('/');
-  } else res.render('urls_new', templateVars);
+app.get('/urls/new/', (req, res) => {
+  if (req.session.loggedIn && users[req.session.user_id]) {
+    let templateVars = {
+      user_id: req.session['user_id'],
+      loggedIn: req.session.loggedIn,
+      email: req.session.email,
+    };
+    res.render('urls_new', templateVars);
+  } else {
+    res.clearCookie('session');
+    res.redirect('/login');
+  }
 });
 
-app.post('/urls/new', (req, res) => {
+app.post('/urls/new/', (req, res) => {
   let longURL = req.body.longURL;
   let shortURL = generateRandomString();
+  let date = new Date();
   urlDatabase[shortURL] = {};
   urlDatabase[shortURL].longURL = longURL;
   urlDatabase[shortURL].userID = req.session['user_id'];
   urlDatabase[shortURL].visits = 0;
   urlDatabase[shortURL].uniqueVisits = 0;
   urlDatabase[shortURL].visitors = {};
+  urlDatabase[shortURL].timeCreated = date.toString().substring(0, 24);
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
@@ -111,17 +128,25 @@ app.post('/urls/new', (req, res) => {
 app.get('/urls/:id', (req, res) => {
   let shortURL;
   for (url in urlDatabase) {
-    if (url == req.params.id) {
-      shortURL = url;
-    }
+    if (url == req.params.id) shortURL = url;
   }
-  let templateVars = {
-    url: shortURL,
-    user_id: req.session.user_id,
-    loggedIn: req.session.loggedIn,
-    visitors: urlDatabase[shortURL].visitors,
-  };
-  res.render('urls_show', templateVars);
+  if (!shortURL) res.redirect('/404')
+  if (shortURL) {
+    let templateVars = {
+      url: shortURL,
+      longURL: urlDatabase[shortURL].longURL,
+      visitors: urlDatabase[shortURL].visitors,
+      visits: urlDatabase[shortURL].visits,
+      uniqueVisits: urlDatabase[shortURL].uniqueVisits,
+      timeCreated: urlDatabase[shortURL].timeCreated,
+      urlOwner: urlDatabase[shortURL].userID,
+      user_id: req.session.user_id,
+      loggedIn: req.session.loggedIn,
+      email: req.session.email,
+    };
+    res.render('urls_show', templateVars);
+  }
+  else res.redirect('/403');
 });
 
 // update and delete endpoints
@@ -144,8 +169,8 @@ app.put('/urls/:id/update', (req, res) => {
 // redirect to longURL when shortURL is visited in /u/shortURL
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
+  if (!urlDatabase[shortURL]) res.redirect('/403');
   let longURL = urlDatabase[shortURL].longURL;
-  if (!urlDatabase[shortURL]) res.redirect('403');
   if (longURL.indexOf('http://') < 0 || longURL.indexOf('http://') > 0) {
     longURL = 'http://' + longURL;
   }
@@ -157,8 +182,7 @@ app.get('/u/:shortURL', (req, res) => {
   }
   let timeStamp = new Date();
   let visitorId = generateRandomString();
-  urlDatabase[shortURL].visitors[visitorId] = timeStamp;
-  console.log(urlDatabase[shortURL].visitors[visitorId]);   //this works. need to change database so every visit is logged.
+  urlDatabase[shortURL].visitors[visitorId] = timeStamp.toString().substring(0, 24);
   res.redirect(longURL);
 });
 
@@ -167,6 +191,7 @@ app.get('/login', (req, res) => {
   let templateVars = {
     user_id: req.session.user_id,
     loggedIn: req.session.loggedIn,
+    email: req.session.email,
   };
   res.render('urls_login', templateVars);
 });
@@ -187,7 +212,7 @@ app.post('/login', (req, res) => {
     req.session.email = req.body.email;
     req.session.user_id = userId;
     res.redirect('/');
-  };
+  }
 });
 
 app.post('/logout', (req, res) => {
@@ -195,13 +220,13 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls');
 });
 
-
 // registration endpoints
 app.get('/register', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
     user_id: req.session.user_id,
     loggedIn: req.session.loggedIn,
+    email: req.session.email,
   };
   res.render('urls_register', templateVars);
 });
@@ -232,6 +257,10 @@ app.get('/400', (req, res) => {
 
 app.get('/403', (req, res) => {
   res.render('403');
+});
+
+app.get('/404', (req, res) => {
+  res.render('404');
 });
 
 // listen

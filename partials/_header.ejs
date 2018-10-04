@@ -1,17 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang='en'>
 <head>
   <title>Header</title>
-  <link rel='stylesheet' type='text/css' href="/public/assets/styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
-  <span><a href='/urls'>Home</a></span>
-  <span><a href='/register'>Registration</a></span>
-  <% if (!loggedIn) { %>
-  <span><a href='/login'>Login</a></span>
-  <% } else { %>
-  <span><a href='/login'>Logout</a></span>
-  <% } %>
-  <span><a href='/urls/new'>New URL</a></span>
+  <div>
+    <nav class="navbar navbar-inverse" style="padding-left:10%;">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="/urls">Home<span class="sr-only">(current)</span></a></li>
+        <li><a href="/register">Register</a></li>
+        <li><a href="/urls/new/">New URL</a></li>
+        <% if (!loggedIn) { %>
+        <li><a href="/login">Login</a></li>
+        <% } else { %>
+        <li><a href="/login">Logout</a></li>
+        <li style="margin-left: 50px;"><a>Current user: <%= email %></a></li>
+        <% } %>
+      </ul>
+
+    </nav>
+  </div>
 </body>
 </html>

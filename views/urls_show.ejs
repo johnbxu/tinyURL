@@ -1,32 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>Shortened URL</title>
-  <link rel='stylesheet' type='text/css' href="/public/assets/styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
+<style type="text/css">
+  body {
+  }
+  .row {
+    margin: auto;
+    margin-bottom: 30px;
+    padding-left: 50px;
+    padding-bottom: 10px;
+    border-radius: 10px;
+    background: #eee;
+  }
+  form {
+    padding-left: 30px;
+    margin-bottom: 30px;
+  }
+</style>
 <body>
   <header>
     <% include ../partials/_header %>
   </header>
-  <h1>Short URL: <%= url %></h1>
-  <div class="textbox">
+
+  <div class="container">
+    <div class="row">
+    <% if (urlOwner != user_id) { %>
+      <h2>You did not create this URL</h2>
+      <h2>You may only change/delete URLs you created</h2>
+    </div>
+    <% } else { %>
+      <h2><a href="<%= longURL %>"><%= longURL %></a></h2>
+      <h3><%= url %></h2>
+      <h4>Created: <%= timeCreated %></h3>
+    </div>
     <form method="POST" action='/urls/<%= url %>/update?_method=PUT'>
-      New url: <input type="text" name="newurl">
+      Enter a new long URL: <input type="text" name="newurl">
       <button type='submit' formmethod='POST'>Update</button>
     </form>
-  </div>
-  <table>
-      <tr>
-        <th>Visitor</th><th>Time of visit</th>
-      </tr>
-    <% for (const visitor in visitors) { %>
-      <tr>
-        <th><%= visitor %></th><th><%= visitors[visitor] %></th>
-
-      </tr>
+    <div>
+      Total visits: <%= visits %>
+      Unique visitors: <%= uniqueVisits %>
+    </div>
+    <table class="table table-hover table-striped">
+      <thead class="thead-dark">
+          <tr>
+            <th>Visitor</th>
+            <th>Time of visit</th>
+          </tr>
+      </thead>
+      <tbody>
+      <% for (const visitor in visitors) { %>
+        <tr><td><%= visitor %></th><th><%= visitors[visitor] %></th></tr>
+      <% } %>
+      </tbody>
+    </table>
     <% } %>
-  </table>
-
+  </div>
 </body>
 </html>
 

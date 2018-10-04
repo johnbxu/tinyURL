@@ -2,47 +2,81 @@
 <html lang="en">
 <head>
   <title>TinyApp</title>
-  <link rel='stylesheet' type='text/css' href="/public/assets/styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
-
+<style type="text/css">
+  .container {
+    margin: auto;
+    width: 70%;
+    min-width: 600px;
+    height: 600px;
+  }
+</style>
 <body>
-  <!-- Add your EJS code here -->
   <header>
     <% include ../partials/_header %>
-    <link rel='stylesheet' type='text/css' href='style.css'>
   </header>
-
+  <div class="container">
   <h1>
     List of URLs in database
   </h1>
-  <table>
+
+
+  <table class="table table-hover table-striped">
       <% if (!loggedIn) { %>
-        <tr><th style="text-align: center;">Please Login First</th></tr>
+        <h2>Please Login First</h2>
       <% } else { %>
+
+      <thead class="thead-dark">
+        <tr>
+          <th>ShortURL</th>
+          <th>LongURL</th>
+          <th>Unique Visits</th>
+          <th>Visits</th>
+          <th>Time Created</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+<!--         <% if (urls.length) { %>
+          <td>You have no URLs yet. Please click New URL to create a new URL.</td>
+        <% } %> -->
         <% for (const url in urls) { %>
           <tr>
-            <th>
+            <th scope="row"><a href='/u/<%= url %>'><%= url %></a></th>
+            <td><%= urls[url].longURL %></td>
+            <% if (urls[url].uniqueVisits) { %>
+              <td><%= urls[url].uniqueVisits %></td>
+            <% } else {%>
+              <td>0</td>
+            <% } %>
+            <% if (urls[url].visits) { %>
+              <td><%= urls[url].visits %></td>
+            <% } else { %>
+            <td>0</td>
+            <% } %>
+            <td><%= urls[url].timeCreated %></td>
+            <td>
               <form action='/urls/<%= url %>/delete?_method=DELETE' method="POST" id='form<%= url %>'>
-                <a href='/u/<%= url %>'><%= url %>: <%= urls[url].longURL %>
+                <button type='submit' formmethod='POST' form='form<%= url %>'>Delete</button>
               </form>
-            </th>
-            <th>
-              <button type='submit' formmethod='POST' form='form<%= url %>'>Delete</button>
-            </th>
-            <th>
+            </td>
+            <td>
               <form method="GET" action='/urls/<%= url %>'>
                 <button type='submit' formmethod='GET'>Update</button>
               </form>
-            </th>
-            <% if (urls[url].uniqueVisits) { %>
-              <th>Unique Visits: <%= urls[url].uniqueVisits %></th>
-            <% } %>
-            <% if (urls[url].visits) { %>
-              <th>Visits: <%= urls[url].visits %></th>
-            <% } %>
+            </td>
           </tr>
         <% } %>
+      </tbody>
       <% } %>
   </table>
+  </div>
+
 </body>
 </html>
