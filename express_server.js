@@ -12,7 +12,6 @@ const methodOverride = require('method-override');
 // using packages
 app.use(cookieParser());
 app.use(methodOverride('_method'));
-// app.use('/public', express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 app.use(cookieSession({
