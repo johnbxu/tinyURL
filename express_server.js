@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const generateRandomString = require('./generateRandomString');
+const urlsForUser = require('./urlsForUser');
 const cookieSession = require('cookie-session');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
@@ -19,17 +20,6 @@ app.use(cookieSession({
   keys: ['keydonut', 'keyeclair'],
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
-
-// function to filter urls based on userID
-const urlsForUser = (id) => {
-  const filteredURLs = {};
-  for (const url in urlDatabase) {
-    if (id == urlDatabase[url].userID) {
-      filteredURLs[url] = urlDatabase[url];
-    }
-  }
-  return filteredURLs;
-};
 
 // variables
 const PORT = 8080;
@@ -80,7 +70,7 @@ app.get('/urls', (req, res) => {
   // checks is user's id exists in the user database. This will be used in several instances throughout.
   if (req.session.loggedIn && users[req.session.user_id]) {
     let templateVars = {
-      urls: urlsForUser(req.session['user_id']),
+      urls: urlsForUser(urlDatabase, req.session['user_id']),
       user_id: req.session['user_id'],
       loggedIn: req.session.loggedIn,
       email: users[req.session.user_id].email,
@@ -110,6 +100,7 @@ app.get('/urls/new/', (req, res) => {
 
 app.post('/urls/new/', (req, res) => {
   if (req.session.loggedIn && users[req.session.user_id]) {
+    // initializes new property in urlDatabase using generated short URL
     let longURL = req.body.longURL;
     let shortURL = generateRandomString();
     let date = new Date();
@@ -130,8 +121,8 @@ app.get('/urls/:id', (req, res) => {
   for (url in urlDatabase) {
     if (url == req.params.id) { shortURL = url; }
   }
-  if (!shortURL) {res.redirect('/404'); }
-  else if (shortURL) {
+  if (!shortURL) { res.redirect('/404'); }
+  else {
     let templateVars = {
       url: urlDatabase[shortURL],
       uniqueVisitor: req.cookies.visitor,
@@ -141,7 +132,6 @@ app.get('/urls/:id', (req, res) => {
     };
     res.render('urls_show', templateVars);
   }
-  else res.redirect('/403');
 });
 
 // update and delete endpoints
@@ -162,25 +152,33 @@ app.put('/urls/:id/update', (req, res) => {
 // redirect to longURL when shortURL is visited in /u/shortURL
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
-  if (!urlDatabase[shortURL]) { res.redirect('/403'); }
-  let longURL = urlDatabase[shortURL].longURL;
-  if (longURL.indexOf('http://') < 0 || longURL.indexOf('http://') > 0) { longURL = 'http://' + longURL; }
-  urlDatabase[shortURL].visits = urlDatabase[shortURL].visits || 0;
-  urlDatabase[shortURL].visits += 1;
-  if (!req.cookies[shortURL]) {
-    res.cookie(shortURL, true);
-    urlDatabase[shortURL].uniqueVisits += 1;
+  if (!urlDatabase[shortURL]) { res.redirect('/404'); }
+  else {
+    let longURL = urlDatabase[shortURL].longURL;
+    // adds http:// to long URL because express automatically redirects to /u/:longurl otherwise
+    if (longURL.indexOf('http://') !== 0 ) { longURL = 'http://' + longURL; }
+
+    // initializes visits counter for shortURL; also creates cookie and increments unique visitors for url
+    urlDatabase[shortURL].visits = urlDatabase[shortURL].visits || 0;
+    urlDatabase[shortURL].visits += 1;
+    if (!req.cookies[shortURL]) {
+      res.cookie(shortURL, true);
+      urlDatabase[shortURL].uniqueVisits += 1;
+    }
+
+    // if unencrypted visitor cookie doesn't exist, generate a random visitor cookie. this keeps track of unique visitor id
+    if (!req.cookies['visitor']) { res.cookie('visitor', generateRandomString()); }
+    if (!urlDatabase[shortURL].visitors) { urlDatabase[shortURL].visitors = {}; }
+
+    // handles visits and timestamps for each short URL
+    let timeStamp = new Date();
+    let visit = generateRandomString();
+    urlDatabase[shortURL].visitors[visit] = {};
+    urlDatabase[shortURL].visitors[visit].uniqueVisitor = req.cookies['visitor'];
+    urlDatabase[shortURL].visitors[visit].visitTime = timeStamp.toString().substring(0, 24);
+
+    res.redirect(longURL);
   }
-  if (!req.cookies['visitor']) {
-    res.cookie('visitor', generateRandomString());
-  }
-  if (!urlDatabase[shortURL].visitors) { urlDatabase[shortURL].visitors = {} };
-  let timeStamp = new Date();
-  let visit = generateRandomString();
-  urlDatabase[shortURL].visitors[visit] = {};
-  urlDatabase[shortURL].visitors[visit].uniqueVisitor = req.cookies['visitor'];
-  urlDatabase[shortURL].visitors[visit].visitTime = timeStamp.toString().substring(0, 24);
-  res.redirect(longURL);
 });
 
 // login and logout endpoints
