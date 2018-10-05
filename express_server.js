@@ -36,6 +36,8 @@ const PORT = 8080;
 const urlDatabase = {
   'b2xVn2': {
     longURL: 'http://lighthouselabs.ca',
+    shortURL: 'b2xVn2',
+    fullURL: 'http://localhost:8080/u/b2xVn2',
     userID: 'userRandomID',
     visits: 0,
     uniqueVisits: 0,
@@ -43,13 +45,14 @@ const urlDatabase = {
   },
   '9sm5xk': {
     longURL: 'http://www.google.com',
+    shortURL: '9sm5xk',
+    fullURL: 'http://localhost:8080/u/9sm5xk',
     userID: 'userRandomID',
     visits: 0,
     uniqueVisits: 0,
     visitors: {},
   },
 };
-
 const users = {
   'userRandomID': {
     id: 'userRandomID',
@@ -66,16 +69,15 @@ const users = {
 // ------------------------------endpoints ---------------------------------- //
 // endpoints for index page
 app.get('/', (req, res) => {
-  if (req.session.loggedIn && users[req.session.user_id]) {
-    res.redirect('/urls');
-  } else {
+  if (req.session.loggedIn && users[req.session.user_id]) { res.redirect('/urls'); }
+  else {
     res.clearCookie('session');
     res.redirect('/login');
   }
 });
 
 app.get('/urls', (req, res) => {
-  // checks is user's id exists in the user database
+  // checks is user's id exists in the user database. This will be used in several instances throughout.
   if (req.session.loggedIn && users[req.session.user_id]) {
     let templateVars = {
       urls: urlsForUser(req.session['user_id']),
@@ -89,10 +91,6 @@ app.get('/urls', (req, res) => {
     res.clearCookie('session');
     res.redirect('/login');
   }
-});
-
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
 });
 
 // enpoints for creating new shortURL
@@ -111,35 +109,32 @@ app.get('/urls/new/', (req, res) => {
 });
 
 app.post('/urls/new/', (req, res) => {
-  let longURL = req.body.longURL;
-  let shortURL = generateRandomString();
-  let date = new Date();
-  urlDatabase[shortURL] = {};
-  urlDatabase[shortURL].longURL = longURL;
-  urlDatabase[shortURL].userID = req.session['user_id'];
-  urlDatabase[shortURL].visits = 0;
-  urlDatabase[shortURL].uniqueVisits = 0;
-  urlDatabase[shortURL].visitors = {};
-  urlDatabase[shortURL].timeCreated = date.toString().substring(0, 24);
-  res.redirect(`http://localhost:8080/urls/${shortURL}`);
+  if (req.session.loggedIn && users[req.session.user_id]) {
+    let longURL = req.body.longURL;
+    let shortURL = generateRandomString();
+    let date = new Date();
+    urlDatabase[shortURL] = {};
+    urlDatabase[shortURL].longURL = longURL;
+    urlDatabase[shortURL].userID = req.session['user_id'];
+    urlDatabase[shortURL].visits = 0;
+    urlDatabase[shortURL].uniqueVisits = 0;
+    urlDatabase[shortURL].timeCreated = date.toString().substring(0, 24);
+    urlDatabase[shortURL].fullURL = req.protocol + '://' + req.get('host') + '/u/' + shortURL;
+    res.redirect(`http://localhost:8080/urls/${shortURL}`);
+  }
 });
 
-// page for updating an URL
+// endpoint for updating an URL
 app.get('/urls/:id', (req, res) => {
   let shortURL;
   for (url in urlDatabase) {
-    if (url == req.params.id) shortURL = url;
+    if (url == req.params.id) { shortURL = url; }
   }
-  if (!shortURL) res.redirect('/404')
-  if (shortURL) {
+  if (!shortURL) {res.redirect('/404'); }
+  else if (shortURL) {
     let templateVars = {
-      url: shortURL,
-      longURL: urlDatabase[shortURL].longURL,
-      visitors: urlDatabase[shortURL].visitors,
-      visits: urlDatabase[shortURL].visits,
-      uniqueVisits: urlDatabase[shortURL].uniqueVisits,
-      timeCreated: urlDatabase[shortURL].timeCreated,
-      urlOwner: urlDatabase[shortURL].userID,
+      url: urlDatabase[shortURL],
+      uniqueVisitor: req.cookies.visitor,
       user_id: req.session.user_id,
       loggedIn: req.session.loggedIn,
       email: req.session.email,
@@ -152,37 +147,39 @@ app.get('/urls/:id', (req, res) => {
 // update and delete endpoints
 app.delete('/urls/:id/delete', (req, res) => {
   let deleteURL = req.params.id;
-  if (urlDatabase[deleteURL].userID == req.session['user_id']) {
-    delete urlDatabase[deleteURL];
-  } else res.redirect('/403');
+  if (urlDatabase[deleteURL].userID == req.session['user_id']) { delete urlDatabase[deleteURL]; }
+  else { res.redirect('/403'); }
   res.redirect('/');
 });
 
 app.put('/urls/:id/update', (req, res) => {
   let updateURL = req.params.id;
-  if (urlDatabase[updateURL].userID == req.session['user_id']) {
-    urlDatabase[updateURL].longURL = req.body.newurl;
-  } else res.redirect('/403');
+  if (urlDatabase[updateURL].userID == req.session['user_id']) { urlDatabase[updateURL].longURL = req.body.newurl; }
+  else res.redirect('/403');
   res.redirect('/urls');
 });
 
 // redirect to longURL when shortURL is visited in /u/shortURL
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
-  if (!urlDatabase[shortURL]) res.redirect('/403');
+  if (!urlDatabase[shortURL]) { res.redirect('/403'); }
   let longURL = urlDatabase[shortURL].longURL;
-  if (longURL.indexOf('http://') < 0 || longURL.indexOf('http://') > 0) {
-    longURL = 'http://' + longURL;
-  }
+  if (longURL.indexOf('http://') < 0 || longURL.indexOf('http://') > 0) { longURL = 'http://' + longURL; }
   urlDatabase[shortURL].visits = urlDatabase[shortURL].visits || 0;
   urlDatabase[shortURL].visits += 1;
   if (!req.cookies[shortURL]) {
     res.cookie(shortURL, true);
     urlDatabase[shortURL].uniqueVisits += 1;
   }
+  if (!req.cookies['visitor']) {
+    res.cookie('visitor', generateRandomString());
+  }
+  if (!urlDatabase[shortURL].visitors) { urlDatabase[shortURL].visitors = {} };
   let timeStamp = new Date();
-  let visitorId = generateRandomString();
-  urlDatabase[shortURL].visitors[visitorId] = timeStamp.toString().substring(0, 24);
+  let visit = generateRandomString();
+  urlDatabase[shortURL].visitors[visit] = {};
+  urlDatabase[shortURL].visitors[visit].uniqueVisitor = req.cookies['visitor'];
+  urlDatabase[shortURL].visitors[visit].visitTime = timeStamp.toString().substring(0, 24);
   res.redirect(longURL);
 });
 
@@ -194,19 +191,16 @@ app.get('/login', (req, res) => {
     email: req.session.email,
   };
   res.render('urls_login', templateVars);
+
 });
 
 app.post('/login', (req, res) => {
   let userId;
   for (user in users) {
-    if (users[user].email == req.body.email) {
-      userId = users[user].id;
-      if (!bcrypt.compareSync(req.body.password, users[userId].password)) {
-        res.redirect('/403');
-      }
-    }
+    if (users[user].email == req.body.email) { userId = users[user].id; }
   }
-  if (!userId) res.redirect('/403');
+  if (!bcrypt.compareSync(req.body.password, users[userId].password)) res.redirect('/403');
+  else if (!userId) { res.redirect('/403'); }
   else {
     req.session.loggedIn = true;
     req.session.email = req.body.email;
@@ -222,13 +216,17 @@ app.post('/logout', (req, res) => {
 
 // registration endpoints
 app.get('/register', (req, res) => {
-  let templateVars = {
-    urls: urlDatabase,
-    user_id: req.session.user_id,
-    loggedIn: req.session.loggedIn,
-    email: req.session.email,
-  };
-  res.render('urls_register', templateVars);
+  if (req.session.loggedIn && users[req.session.user_id]) {
+    res.redirect('/urls');
+  } else {
+    let templateVars = {
+      urls: urlDatabase,
+      user_id: req.session.user_id,
+      loggedIn: req.session.loggedIn,
+      email: req.session.email,
+    };
+    res.render('urls_register', templateVars);
+  }
 });
 
 app.post('/register', (req, res) => {
@@ -237,10 +235,10 @@ app.post('/register', (req, res) => {
     const currentEmail = users[user].email;
     if (currentEmail == req.body.email) {
       duplicate = true;
-      res.redirect('/400');
     }
   }
-  if (!duplicate) {
+  if (duplicate) { res.redirect('/400'); }
+  else if (!duplicate) {
     let userid = generateRandomString();
     users[userid] = {};
     users[userid].id = userid;
@@ -254,15 +252,12 @@ app.post('/register', (req, res) => {
 app.get('/400', (req, res) => {
   res.render('400');
 });
-
 app.get('/403', (req, res) => {
   res.render('403');
 });
-
 app.get('/404', (req, res) => {
   res.render('404');
 });
-
 // listen
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);

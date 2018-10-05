@@ -31,33 +31,38 @@
 
   <div class="container">
     <div class="row">
-    <% if (urlOwner != user_id) { %>
+    <% if (url.userID != user_id) { %>
       <h2>You did not create this URL</h2>
       <h2>You may only change/delete URLs you created</h2>
     </div>
     <% } else { %>
-      <h2><a href="<%= longURL %>"><%= longURL %></a></h2>
-      <h3><%= url %></h2>
-      <h4>Created: <%= timeCreated %></h3>
+      <table>
+        <td><h2><a href="<%= url.longURL %>"><%= url.longURL %> &#8594; <%= url.fullURL %></a></h2></td>
+        <td>
+        <form style="padding-top: 40px;" method="POST" action="/urls/<%= url %>/delete?_method=DELETE"><button>Delete This Entry</button></form>
+        </td>
+      </table>
+      <h4 style="padding-bottom: 20px;">Created: <%= url.timeCreated %></h3>
     </div>
-    <form method="POST" action='/urls/<%= url %>/update?_method=PUT'>
-      Enter a new long URL: <input type="text" name="newurl">
+    <form style="font-size: 20px;" method="POST" action='/urls/<%= url %>/update?_method=PUT'>
+      Update the long URL: <input type="http" name="newurl">
       <button type='submit' formmethod='POST'>Update</button>
     </form>
     <div>
-      Total visits: <%= visits %>
-      Unique visitors: <%= uniqueVisits %>
+      Total visits: <%= url.visits %>
+      Unique visitors: <%= url.uniqueVisits %>
     </div>
     <table class="table table-hover table-striped">
       <thead class="thead-dark">
-          <tr>
-            <th>Visitor</th>
-            <th>Time of visit</th>
-          </tr>
+        <tr>
+          <th>Visitor</th>
+          <th>Visit ID</th>
+          <th>Time of visit</th>
+        </tr>
       </thead>
       <tbody>
-      <% for (const visitor in visitors) { %>
-        <tr><td><%= visitor %></th><th><%= visitors[visitor] %></th></tr>
+      <% for (const visitor in url.visitors) { %>
+        <tr><td><%= url.visitors[visitor].uniqueVisitor %></td><td><%= visitor %></th><th><%= url.visitors[visitor].visitTime %></th></tr>
       <% } %>
       </tbody>
     </table>
