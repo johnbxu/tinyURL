@@ -21,58 +21,53 @@
     <% include ../partials/_header %>
   </header>
   <div class="container">
-  <h1>
-    List of URLs in database
-  </h1>
-
-
-  <table class="table table-hover table-striped">
-      <% if (!loggedIn) { %>
-        <h2>Please Login First</h2>
-      <% } else { %>
-      <thead class="thead-dark">
-        <tr>
-          <th>Shortened URL</th>
-          <th>Long URL</th>
-          <th>Unique Visits</th>
-          <th>Visits</th>
-          <th>Time Created</th>
-          <th>Delete Entry</th>
-          <th>Change Long URL</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% for (const url in urls) { %>
+    <h1>List of URLs in database</h1>
+    <table class="table table-hover table-striped">
+        <% if (!loggedIn) { %>
+          <h2>Please Login First</h2>
+        <% } else { %>
+        <thead class="thead-dark">
           <tr>
-            <th scope="row"><a href='/u/<%= url %>'><%= urls[url].fullURL %></a></th>
-            <td><%= urls[url].longURL %></td>
-            <% if (urls[url].uniqueVisits) { %>
-              <td><%= urls[url].uniqueVisits %></td>
-            <% } else {%>
-              <td>0</td>
-            <% } %>
-            <% if (urls[url].visits) { %>
-              <td><%= urls[url].visits %></td>
-            <% } else { %>
-            <td>0</td>
-            <% } %>
-            <td><%= urls[url].timeCreated %></td>
-            <td>
-              <form action='/urls/<%= url %>/delete?_method=DELETE' method="POST" id='form<%= url %>'>
-                <button type='submit' formmethod='POST' form='form<%= url %>'>Delete</button>
-              </form>
-            </td>
-            <td>
-              <form method="GET" action='/urls/<%= url %>'>
-                <button type='submit' formmethod='GET'>Change</button>
-              </form>
-            </td>
+            <th>Shortened URL</th>
+            <th>Long URL</th>
+            <th>Unique Visits</th>
+            <th>Visits</th>
+            <th>Time Created</th>
+            <th>Delete Entry</th>
+            <th>Change Long URL</th>
           </tr>
+        </thead>
+        <tbody>
+          <% for (const url in urls) { %>
+            <tr>
+              <th scope="row"><a href='/u/<%= url %>'><%= urls[url].fullURL %></a></th>
+              <td><%= urls[url].longURL %></td>
+              <% if (urls[url].uniqueVisits) { %>
+                <td><%= urls[url].uniqueVisits %></td>
+              <% } else {%>
+                <td>0</td>
+              <% } %>
+              <% if (urls[url].visits) { %>
+                <td><%= urls[url].visits %></td>
+              <% } else { %>
+              <td>0</td>
+              <% } %>
+              <td><%= urls[url].timeCreated %></td>
+              <td>
+                <form action='/urls/<%= url %>/delete?_method=DELETE' method="POST" id='form<%= url %>'>
+                  <button type='submit' formmethod='POST' form='form<%= url %>'>Delete</button>
+                </form>
+              </td>
+              <td>
+                <form method="GET" action='/urls/<%= url %>'>
+                  <button type='submit' formmethod='GET'>Change</button>
+                </form>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
         <% } %>
-      </tbody>
-      <% } %>
-  </table>
+    </table>
   </div>
-
 </body>
 </html>

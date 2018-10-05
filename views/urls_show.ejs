@@ -28,7 +28,6 @@
   <header>
     <% include ../partials/_header %>
   </header>
-
   <div class="container">
     <div class="row">
     <% if (url.userID != user_id) { %>
@@ -39,7 +38,7 @@
       <table>
         <td><h2><a href="<%= url.longURL %>"><%= url.longURL %> &#8594; <%= url.fullURL %></a></h2></td>
         <td>
-        <form style="padding-top: 40px;" method="POST" action="/urls/<%= url %>/delete?_method=DELETE"><button>Delete This Entry</button></form>
+        <form style="padding-top: 40px; padding-right: 50px" method="POST" action="/urls/<%= url %>/delete?_method=DELETE"><button>Delete This Entry</button></form>
         </td>
       </table>
       <h4 style="padding-bottom: 20px;">Created: <%= url.timeCreated %></h3>
@@ -70,6 +69,3 @@
   </div>
 </body>
 </html>
-
-<!-- variables passed into this file:  -->
-<!-- shortURL, urls (an object) -->
