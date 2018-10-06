@@ -2,8 +2,6 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const generateRandomString = require('./generateRandomString');
-const urlsForUser = require('./urlsForUser');
 const cookieSession = require('cookie-session');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
@@ -55,10 +53,28 @@ const users = {
   },
 };
 
+// functions
+// this function takes a database and filters it using given id
+const urlsForUser = (database, id) => {
+  const filteredURLs = {};
+  for (const url in database) {
+    if (id == database[url].userID) { filteredURLs[url] = database[url]; }
+  }
+  return filteredURLs;
+};
+
+// This function generates a random alphanumeric string in base 36 and cuts it down to length of 5
+const generateRandomString = () => {
+  return Math.random().toString(36).substring(2, 8);
+};
+
+
 // ------------------------------endpoints ---------------------------------- //
 // endpoints for index page
 app.get('/', (req, res) => {
-  if (req.session.loggedIn && users[req.session.user_id]) { res.redirect('/urls'); }
+  if (req.session.loggedIn && users[req.session.user_id]) {
+    res.redirect('/urls');
+  }
   else {
     res.clearCookie('session');
     res.redirect('/login');
@@ -68,7 +84,7 @@ app.get('/', (req, res) => {
 app.get('/urls', (req, res) => {
   // checks is user's id exists in the user database. This will be used in several instances throughout.
   if (req.session.loggedIn && users[req.session.user_id]) {
-    let templateVars = {
+    const templateVars = {
       urls: urlsForUser(urlDatabase, req.session['user_id']),
       user_id: req.session['user_id'],
       loggedIn: req.session.loggedIn,
@@ -85,7 +101,7 @@ app.get('/urls', (req, res) => {
 // enpoints for creating new shortURL
 app.get('/urls/new/', (req, res) => {
   if (req.session.loggedIn && users[req.session.user_id]) {
-    let templateVars = {
+    const templateVars = {
       user_id: req.session['user_id'],
       loggedIn: req.session.loggedIn,
       email: req.session.email,
@@ -100,17 +116,19 @@ app.get('/urls/new/', (req, res) => {
 app.post('/urls/new/', (req, res) => {
   if (req.session.loggedIn && users[req.session.user_id]) {
     // initializes new property in urlDatabase using generated short URL
-    let longURL = req.body.longURL;
-    let shortURL = generateRandomString();
-    let date = new Date();
+    const longURL = req.body.longURL;
+    const shortURL = generateRandomString();
+    const date = new Date();
     urlDatabase[shortURL] = {};
     urlDatabase[shortURL].longURL = longURL;
+    urlDatabase[shortURL].shortURL = shortURL;
     urlDatabase[shortURL].userID = req.session['user_id'];
     urlDatabase[shortURL].visits = 0;
     urlDatabase[shortURL].uniqueVisits = 0;
     urlDatabase[shortURL].timeCreated = date.toString().substring(0, 24);
     urlDatabase[shortURL].fullURL = req.protocol + '://' + req.get('host') + '/u/' + shortURL;
-    res.redirect(`http://localhost:8080/urls/${shortURL}`);
+    res.redirect(`${req.protocol}://${req.get('host')}/urls/${shortURL}`);
+    console.log(urlDatabase);
   }
 });
 
@@ -118,11 +136,13 @@ app.post('/urls/new/', (req, res) => {
 app.get('/urls/:id', (req, res) => {
   let shortURL;
   for (url in urlDatabase) {
-    if (url == req.params.id) { shortURL = url; }
+    if (url == req.params.id) {
+      shortURL = url;
+    }
   }
   if (!shortURL) { res.redirect('/404'); }
   else {
-    let templateVars = {
+    const templateVars = {
       url: urlDatabase[shortURL],
       uniqueVisitor: req.cookies.visitor,
       user_id: req.session.user_id,
@@ -135,27 +155,40 @@ app.get('/urls/:id', (req, res) => {
 
 // update and delete endpoints
 app.delete('/urls/:id/delete', (req, res) => {
-  let deleteURL = req.params.id;
-  if (urlDatabase[deleteURL].userID == req.session['user_id']) { delete urlDatabase[deleteURL]; }
-  else { res.redirect('/403'); }
+  const deleteURL = req.params.id;
+  if (urlDatabase[deleteURL].userID == req.session['user_id']) {
+    console.log(urlDatabase);
+    delete urlDatabase[deleteURL];
+  }
+  else {
+    res.redirect('/403');
+  }
   res.redirect('/');
 });
 
 app.put('/urls/:id/update', (req, res) => {
-  let updateURL = req.params.id;
-  if (urlDatabase[updateURL].userID == req.session['user_id']) { urlDatabase[updateURL].longURL = req.body.newurl; }
-  else res.redirect('/403');
+  const updateURL = req.params.id;
+  if (urlDatabase[updateURL].userID == req.session['user_id']) {
+    urlDatabase[updateURL].longURL = req.body.newurl;
+  }
+  else {
+    res.redirect('/403');
+  }
   res.redirect('/urls');
 });
 
 // redirect to longURL when shortURL is visited in /u/shortURL
 app.get('/u/:shortURL', (req, res) => {
-  let shortURL = req.params.shortURL;
-  if (!urlDatabase[shortURL]) { res.redirect('/404'); }
+  const shortURL = req.params.shortURL;
+  if (!urlDatabase[shortURL]) {
+    res.redirect('/404');
+  }
   else {
     let longURL = urlDatabase[shortURL].longURL;
     // adds http:// to long URL because express automatically redirects to /u/:longurl otherwise
-    if (longURL.indexOf('http://') !== 0 ) { longURL = 'http://' + longURL; }
+    if (longURL.indexOf('http://') !== 0 ) {
+      longURL = 'http://' + longURL;
+    }
 
     // initializes visits counter for shortURL; also creates cookie and increments unique visitors for url
     urlDatabase[shortURL].visits = urlDatabase[shortURL].visits || 0;
@@ -166,12 +199,13 @@ app.get('/u/:shortURL', (req, res) => {
     }
 
     // if unencrypted visitor cookie doesn't exist, generate a random visitor cookie. this keeps track of unique visitor id
-    if (!req.cookies['visitor']) { res.cookie('visitor', generateRandomString()); }
-    if (!urlDatabase[shortURL].visitors) { urlDatabase[shortURL].visitors = {}; }
+    if (!urlDatabase[shortURL].visitors) {
+      urlDatabase[shortURL].visitors = {};
+    }
 
     // handles visits and timestamps for each short URL
-    let timeStamp = new Date();
-    let visit = generateRandomString();
+    const timeStamp = new Date();
+    const visit = generateRandomString();
     urlDatabase[shortURL].visitors[visit] = {};
     urlDatabase[shortURL].visitors[visit].uniqueVisitor = req.cookies['visitor'];
     urlDatabase[shortURL].visitors[visit].visitTime = timeStamp.toString().substring(0, 24);
@@ -182,7 +216,7 @@ app.get('/u/:shortURL', (req, res) => {
 
 // login and logout endpoints
 app.get('/login', (req, res) => {
-  let templateVars = {
+  const templateVars = {
     user_id: req.session.user_id,
     loggedIn: req.session.loggedIn,
     email: req.session.email,
@@ -194,14 +228,23 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   let userId;
   for (user in users) {
-    if (users[user].email == req.body.email) { userId = users[user].id; }
+    if (users[user].email == req.body.email) {
+      userId = users[user].id;
+    }
   }
-  if (!bcrypt.compareSync(req.body.password, users[userId].password)) res.redirect('/403');
-  else if (!userId) { res.redirect('/403'); }
+  if (!userId) {
+    res.redirect('/403');
+  }
+  else if (!bcrypt.compareSync(req.body.password, users[userId].password)) {
+    res.redirect('/403');
+  }
   else {
     req.session.loggedIn = true;
     req.session.email = req.body.email;
     req.session.user_id = userId;
+    if (!req.cookies['visitor']) {
+      res.cookie('visitor', generateRandomString());
+    }
     res.redirect('/');
   }
 });
@@ -216,7 +259,7 @@ app.get('/register', (req, res) => {
   if (req.session.loggedIn && users[req.session.user_id]) {
     res.redirect('/urls');
   } else {
-    let templateVars = {
+    const templateVars = {
       urls: urlDatabase,
       user_id: req.session.user_id,
       loggedIn: req.session.loggedIn,
@@ -234,8 +277,10 @@ app.post('/register', (req, res) => {
       duplicate = true;
     }
   }
-  if (duplicate) { res.redirect('/400'); }
-  else if (!duplicate) {
+  if (duplicate) {
+    res.redirect('/400');
+  }
+  else {
     let userid = generateRandomString();
     users[userid] = {};
     users[userid].id = userid;

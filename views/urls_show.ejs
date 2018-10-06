@@ -38,12 +38,12 @@
       <table>
         <td><h2><a href="<%= url.longURL %>"><%= url.longURL %> &#8594; <%= url.fullURL %></a></h2></td>
         <td>
-        <form style="padding-top: 40px; padding-right: 50px" method="POST" action="/urls/<%= url %>/delete?_method=DELETE"><button>Delete This Entry</button></form>
+        <form style="padding-top: 40px; padding-right: 50px" method="POST" action="/urls/<%= url.shortURL %>/delete?_method=DELETE"><button>Delete This Entry</button></form>
         </td>
       </table>
       <h4 style="padding-bottom: 20px;">Created: <%= url.timeCreated %></h3>
     </div>
-    <form style="font-size: 20px;" method="POST" action='/urls/<%= url %>/update?_method=PUT'>
+    <form style="font-size: 20px;" method="POST" action='/urls/<%= url.shortURL %>/update?_method=PUT'>
       Update the long URL: <input type="http" name="newurl">
       <button type='submit' formmethod='POST'>Update</button>
     </form>
